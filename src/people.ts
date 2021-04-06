@@ -1,8 +1,10 @@
 import { Request, ResponseToolkit, ResponseObject, ServerRoute } from "@hapi/hapi";
+import Boom from "@hapi/boom";
 import Joi from "joi";
 const ValidationError = Joi.ValidationError;
 
 type Person = {
+    id: number,
     name: string;
     age: number;
 }
@@ -13,15 +15,20 @@ const schema = Joi.object({
 });
 
 const people: Person[] = [
-    { name: "Sophie", age: 37 },
-    { name: "Dan", age: 42 }
+    { id: 1, name: "Sophie", age: 37 },
+    { id: 2, name: "Dan",    age: 42 }
 ];
 
-async function showPeople(request: Request, h: ResponseToolkit): Promise<ResponseObject> {
+async function showPeople(_request: Request, h: ResponseToolkit): Promise<ResponseObject> {
     return h.view("people", { people: people });
 }
 
-async function addPersonGet(request: Request, h: ResponseToolkit): Promise<ResponseObject> {
+async function showPerson(request: Request, h: ResponseToolkit): Promise<ResponseObject> {
+    const person = people.find(person => person.id == parseInt(request.params.personId));
+    return h.view("person", { person: person });
+}
+
+async function addPersonGet(_request: Request, h: ResponseToolkit): Promise<ResponseObject> {
     let data = ({} as Person);
     return h.view("addPerson", { person: data });
 }
@@ -45,6 +52,7 @@ async function addPersonPost(request: Request, h: ResponseToolkit): Promise<Resp
           }
       } else {
           console.error("error", err, "adding person");
+          throw Boom.badImplementation("Error adding person");
       }
 
       return h.view("addPerson", { person: data, errors: errors })
@@ -53,6 +61,7 @@ async function addPersonPost(request: Request, h: ResponseToolkit): Promise<Resp
 
 export const peopleRoutes: ServerRoute[] = [
   { method: "GET", path: "/people", handler: showPeople },
+  { method: "GET", path: "/people/{personId}", handler: showPerson },
   { method: "GET", path: "/people/add", handler: addPersonGet },
   { method: "POST", path: "/people/add", handler: addPersonPost }  
 ];
