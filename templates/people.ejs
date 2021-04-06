@@ -1,0 +1,15 @@
+<html>
+	<head>
+		<title>Purple People Eaters</title>
+	</head>
+	<body>
+		<ul>
+			<% people.forEach(person => { %>
+				<li class="person-entry">
+					<%= person.name %> - <%= person.age %>
+				</li>
+			<% }) %>
+		</ul>
+		<a href="/people/add">Add person</a>
+	</body>
+</html>
