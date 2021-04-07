@@ -24,8 +24,7 @@ async function showPeople(_request: Request, h: ResponseToolkit): Promise<Respon
 }
 
 async function showPerson(request: Request, h: ResponseToolkit): Promise<ResponseObject> {
-    const person = people.find(person => person.id == parseInt(request.params.personId));
-    return h.view("person", { person: person });
+    return h.view("person", { person: request.pre.person });
 }
 
 async function addPersonGet(_request: Request, h: ResponseToolkit): Promise<ResponseObject> {
@@ -59,9 +58,27 @@ async function addPersonPost(request: Request, h: ResponseToolkit): Promise<Resp
     }
 }
 
+async function checkPerson(request: Request, h: ResponseToolkit): Promise<Person | undefined> {
+  if (!request.params.personId) {
+    throw Boom.badRequest("No personId found");
+  }
+
+  try {
+    const person = people.find(person => person.id == parseInt(request.params.personId));
+    if (!person) {
+      throw Boom.notFound("Person not found");
+    }
+    return person;
+  } catch (err) {
+    console.error("Error", err, "finding person");
+    throw Boom.badImplementation("Error finding person");
+  }
+}
+const checkPersonPre = { method: checkPerson, assign: "person" };
+
 export const peopleRoutes: ServerRoute[] = [
   { method: "GET", path: "/people", handler: showPeople },
-  { method: "GET", path: "/people/{personId}", handler: showPerson },
+  { method: "GET", path: "/people/{personId}", handler: showPerson, options: { pre: [checkPersonPre] } },
   { method: "GET", path: "/people/add", handler: addPersonGet },
   { method: "POST", path: "/people/add", handler: addPersonPost }  
 ];
