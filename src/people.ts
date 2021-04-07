@@ -58,6 +58,10 @@ async function addPersonPost(request: Request, h: ResponseToolkit): Promise<Resp
     }
 }
 
+async function deletePerson(request: Request, h: ResponseToolkit): Promise<ResponseObject> {
+  return h.view("deleted", { id: request.pre.person.id });
+}
+
 async function checkPerson(request: Request, h: ResponseToolkit): Promise<Person | undefined> {
   if (!request.params.personId) {
     throw Boom.badRequest("No personId found");
@@ -79,6 +83,7 @@ const checkPersonPre = { method: checkPerson, assign: "person" };
 export const peopleRoutes: ServerRoute[] = [
   { method: "GET", path: "/people", handler: showPeople },
   { method: "GET", path: "/people/{personId}", handler: showPerson, options: { pre: [checkPersonPre] } },
+  { method: "POST", path: "/people/{personId}/delete", handler: deletePerson, options: { pre: [checkPersonPre] } },
   { method: "GET", path: "/people/add", handler: addPersonGet },
   { method: "POST", path: "/people/add", handler: addPersonPost }  
 ];
